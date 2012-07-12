@@ -1,0 +1,4 @@
+pySequenceTester
+================
+
+Sequence integrity tester
