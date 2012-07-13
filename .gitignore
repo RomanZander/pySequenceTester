@@ -1,7 +1,8 @@
 # My customs
 .project
 .pydevproject
-
+.settings*
+test*
 
 *.py[co]
 
