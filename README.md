@@ -1,4 +1,4 @@
 pySequenceTester
 ================
 
-Sequence integrity tester
+Sequence integrity tester, console version
