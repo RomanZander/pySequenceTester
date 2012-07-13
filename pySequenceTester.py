@@ -11,6 +11,7 @@
 # ---------------------------------------------------------------------------------------------
 """
     -help argument
+    regexp file list cleanup
 """
 # ---------------------------------------------------------------------------------------------
 # CHANGELOG
@@ -18,7 +19,7 @@
 """
 +0.1.0 - 2012.07.12
     arguments reading (none = current dir, path = dir, [path/]wildcard = [dir/]files),
-     
+    dummy functions and SystemExits 
 """
 
 import os
@@ -28,7 +29,8 @@ from glob import glob
 
 pst_pathToScan = ''
 pst_wildcardToScan = ''
-pst_rawFileList = [] 
+pst_fileList = []
+pst_sequenceList =[] 
 
 # smart sorting function
 def pstSortWithLen( a, b ):
@@ -65,8 +67,8 @@ def pstReadArgv():
         pst_wildcardToScan = '*'
 
 def pstGetRawFileList():
-    global pst_rawFileList
-    pst_rawFileList = sorted( glob( os.path.join( pst_pathToScan, pst_wildcardToScan )), cmp=pstSortWithLen )
+    global pst_fileList
+    pst_fileList = sorted( glob( os.path.join( pst_pathToScan, pst_wildcardToScan )), cmp=pstSortWithLen )
     
 
 def pstCleanUpFileList():
@@ -75,15 +77,25 @@ def pstCleanUpFileList():
 def pstBuildSequences():
     pass
 
+def pstOutputSequences():
+    pass
+
 if __name__ == '__main__':
     pstReadArgv()
     pstGetRawFileList()
+    if len( pst_fileList ) == 0: # nothing in the directory
+        raise SystemExit , u'File list is empty'
     pstCleanUpFileList()
+    if len( pst_fileList ) == 0: # nothing sequence-like in list
+        raise SystemExit , u'No sequences were found'
     pstBuildSequences()
+    if len( pst_sequenceList ) == 0: # nothing sequence-like in list
+        raise SystemExit , u'No sequences were found'
+    pstOutputSequences()
     
     ### test output
     print("\n" + 'pst_rawFileList = ')
-    for i in pst_rawFileList:
+    for i in pst_fileList:
         print (i)
     ###/
     
