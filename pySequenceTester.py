@@ -38,9 +38,9 @@ pst_wildcardToScan = ''
 pst_fileList = []
 pst_sequenceList =[]
 
-# set and comlile naming convention regexp pattern
-pst_nameConvPattern = '^(.*\D)?(\d+)(\.[^\.]+)$'
-pst_compiledPattern = re.compile( pst_nameConvPattern, re.I ) 
+# set and compile naming convention regexp pattern
+pst_namingConventionPattern = '^(.*\D)?(\d+)(\.[^\.]+)$'
+pst_compiledPattern = re.compile( pst_namingConventionPattern, re.I ) 
 
 # smart sorting function
 def pstSortWithLen( a, b ):
