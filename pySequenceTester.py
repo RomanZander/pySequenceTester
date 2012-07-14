@@ -2,7 +2,7 @@
 '''
 @summary: Sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.0 
+@version: 0.1.1 
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -10,8 +10,10 @@
 # TODO
 # ---------------------------------------------------------------------------------------------
 """
+    sequences and gaps recognition
+    formatted output
     -help argument
-    regexp file list cleanup
+
 """
 # ---------------------------------------------------------------------------------------------
 # CHANGELOG
@@ -19,7 +21,11 @@
 """
 +0.1.0 - 2012.07.12
     arguments reading (none = current dir, path = dir, [path/]wildcard = [dir/]files),
-    dummy functions and SystemExits 
+    getting raw file list,
+    dummy functions and SystemExits
++0.1.1 - 2012.07.14
+    path cleanup from file list,
+    regexp pattern cleanup from file list
 """
 
 import os
@@ -30,7 +36,11 @@ from glob import glob
 pst_pathToScan = ''
 pst_wildcardToScan = ''
 pst_fileList = []
-pst_sequenceList =[] 
+pst_sequenceList =[]
+
+# set and comlile naming convention regexp pattern
+pst_nameConvPattern = '^(.*\D)?(\d+)(\.[^\.]+)$'
+pst_compiledPattern = re.compile( pst_nameConvPattern, re.I ) 
 
 # smart sorting function
 def pstSortWithLen( a, b ):
@@ -68,10 +78,15 @@ def pstReadArgv():
 
 def pstGetRawFileList():
     global pst_fileList
-    pst_fileList = sorted( glob( os.path.join( pst_pathToScan, pst_wildcardToScan )), cmp=pstSortWithLen )
+    pst_fileList = sorted( glob( os.path.join( pst_pathToScan, pst_wildcardToScan )))
     
 
 def pstCleanUpFileList():
+    global pst_fileList
+    # extract basename
+    pst_fileList = map(os.path.basename, pst_fileList) 
+    # filter for name convention by regexp pattern
+    pst_fileList = filter( pst_compiledPattern.match, pst_fileList )
     pass
 
 def pstBuildSequences():
@@ -84,13 +99,15 @@ if __name__ == '__main__':
     pstReadArgv()
     pstGetRawFileList()
     if len( pst_fileList ) == 0: # nothing in the directory
-        raise SystemExit , u'File list is empty'
+        raise SystemExit , u"\n No files were found for this path or wildcard"
+    
     pstCleanUpFileList()
     if len( pst_fileList ) == 0: # nothing sequence-like in list
-        raise SystemExit , u'No sequences were found'
+        raise SystemExit , u"\n No sequence-like files were found for this path or wildcard"
+
     pstBuildSequences()
-    if len( pst_sequenceList ) == 0: # nothing sequence-like in list
-        raise SystemExit , u'No sequences were found'
+    #if len( pst_sequenceList ) == 0: # nothing sequence-like in list
+    #    raise SystemExit , u'No sequences were found'
     pstOutputSequences()
     
     ### test output
@@ -98,5 +115,3 @@ if __name__ == '__main__':
     for i in pst_fileList:
         print (i)
     ###/
-    
-    
