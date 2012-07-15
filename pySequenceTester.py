@@ -36,25 +36,12 @@ from glob import glob
 pst_pathToScan = ''
 pst_wildcardToScan = ''
 pst_fileList = []
-pst_sequenceList = None
+pst_collectedSequences = []
+pst_sequenceList = []
 
 # set and compile naming convention regexp pattern
 pst_namingConventionPattern = '^(.*\D)?(\d+)(\.[^\.]+)$'
 pst_compiledPattern = re.compile( pst_namingConventionPattern, re.I ) 
-
-# smart sorting function
-def pstSortWithLen( a, b ):
-    # for equal length
-    if len( a ) == len( b ): 
-        if a > b:
-            return 1
-        else:
-            return -1
-    # with different length: longer is the greatest    
-    elif len( a ) > len( b ):
-        return 1
-    else:
-        return -1
 
 def pstReadArgv():
     global pst_pathToScan, pst_wildcardToScan
@@ -83,17 +70,52 @@ def pstGetRawFileList():
 
 def pstCleanUpFileList():
     global pst_fileList
-    # extract basename
+    # extract file basename
     pst_fileList = map(os.path.basename, pst_fileList) 
     # filter for name convention by regexp pattern
     pst_fileList = filter( pst_compiledPattern.match, pst_fileList )
-    pass
 
 def pstBuildSequences():
-    pass
+    global pst_fileList, pst_collectedSequences
+    # build splitted file list (splitted by extention, filename prefix and file number)
+    splittedList = [] 
+    for fileName in pst_fileList:
+        filePrefix = pst_compiledPattern.match( fileName ).group( 1 )
+        fileIndex = pst_compiledPattern.match( fileName ).group( 2 )
+        fileNumber = int( fileIndex, 10 )
+        fileExt = pst_compiledPattern.match(fileName).group(3)
+        splittedList.append( [fileExt, filePrefix, fileNumber, fileIndex] )
+    # sort splitted file list
+    splittedList.sort()
+    # recollect by extention
+    currentSequence = []
+    lastToCompare = None
+    for splittedElement in splittedList:
+        # first iteration
+        if lastToCompare == None:
+            currentSequence.append(splittedElement)
+            # remember extention and prefix
+            lastToCompare = [ splittedElement[0], splittedElement[1] ]
+        # same extention and prefix
+        elif lastToCompare == [ splittedElement[0], splittedElement[1] ]:
+            currentSequence.append(splittedElement)
+        # extention or prefix changed
+        else:
+            pst_collectedSequences.append(currentSequence)
+            lastToCompare = [ splittedElement[0], splittedElement[1] ]
+            currentSequence = []
+            currentSequence.append(splittedElement)
+    # close (last loop) collection
+    pst_collectedSequences.append(currentSequence)        
+    # single elements removal
+    pst_collectedSequences = [item for item in pst_collectedSequences if len(item) > 1 ]
 
 def pstOutputSequences():
-    pass
+    global pst_collectedSequences
+    for item in pst_collectedSequences:
+        # ...
+        pass
+    
 
 if __name__ == '__main__':
     pstReadArgv()
@@ -106,12 +128,16 @@ if __name__ == '__main__':
         raise SystemExit , u"\n No sequence-like files were found for this path or wildcard"
 
     pstBuildSequences()
-    #if len( pst_sequenceList ) == 0: # nothing sequence-like in list
-    #    raise SystemExit , u'No sequences were found'
+    if len( pst_collectedSequences ) == 0: # nothing sequence-like in list
+        raise SystemExit , u"\n No sequences were found for this path or wildcard"
     pstOutputSequences()
     
     ### test output
-    print("\n" + 'pst_rawFileList = ')
-    for i in pst_fileList:
-        print (i)
+    
+    for item in pst_collectedSequences:
+        print '['
+        for items in item:
+            print "\t" + str(items)
+        print '],'
+    
     ###/
