@@ -36,7 +36,7 @@ from glob import glob
 pst_pathToScan = ''
 pst_wildcardToScan = ''
 pst_fileList = []
-pst_sequenceList =[]
+pst_sequenceList = None
 
 # set and compile naming convention regexp pattern
 pst_namingConventionPattern = '^(.*\D)?(\d+)(\.[^\.]+)$'
