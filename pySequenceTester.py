@@ -2,7 +2,7 @@
 '''
 @summary: Sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.3
+@version: 0.1.4
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -10,10 +10,7 @@
 # TODO
 # ---------------------------------------------------------------------------------------------
 """
-    gap formatting
     -help argument
-    more smart multipadding processing
-
 """
 # ---------------------------------------------------------------------------------------------
 # CHANGELOG
@@ -31,6 +28,8 @@
 +0.1.3
     output chains/gaps
     multipadding trap
++0.1.4
+    smart gap output
 """
 
 import os
@@ -42,7 +41,6 @@ pst_pathToScan = ''
 pst_wildcardToScan = ''
 pst_fileList = []
 pst_collectedSequences = []
-pst_sequenceList = []
 
 # set and compile naming convention regexp pattern
 pst_namingConventionPattern = '^(.*\D)?(\d+)(\.[^\.]+)$'
@@ -124,9 +122,9 @@ def pstOutputSequences():
         # init last number from first file number
         chainLastNumber = currentSequence[0][2] 
         outputChain = ' {prefix:s}[{start:s}-{finish:s}]{ext:s} - {count:d} frames'
-        outputGap = ' {prefix:s}[ ... ]{ext:s} GAP, {count:d} frames'
-        # new line before each sequence
-        print "\n" 
+        outputGap = ' {prefix:s}[{start:s}-{finish:s}]{ext:s} GAP FOUND, {count:d} frames'
+        # blank line before each sequence
+        print ' ' 
         for currentIndex in range( 1, len( currentSequence )):
             # compare current number, if +1 increment
             if currentSequence[ currentIndex ][2] == ( chainLastNumber + 1 ):
@@ -149,16 +147,28 @@ def pstOutputSequences():
                 raise SystemExit , multipaddingMessage
             # if not +1
             else: 
-                # output remembered chain
-                print outputChain.format( prefix = chainStart[1],
-                    start = chainStart[3],
-                    finish = chainFinish[3],
-                    ext = chainStart[0],
-                    count = chainFinish[2] - chainStart[2] + 1 )
-                # compute and output gap
-                print outputGap.format( prefix = chainStart[1],
-                    ext = chainStart[0],
-                    count = currentSequence[ currentIndex ][2] - chainFinish[2] - 1 )
+                # compute and output remembered chain
+                chainPrefixOut = chainStart[1]
+                chainStartOut = chainStart[3]
+                chainFinishOut = chainFinish[3]
+                chainExtOut = chainStart[0]
+                chainCountOut = chainFinish[2] - chainStart[2] + 1
+                print outputChain.format( prefix = chainPrefixOut,
+                                          start = chainStartOut,
+                                          finish = chainFinishOut,
+                                          ext = chainExtOut,
+                                          count = chainCountOut )
+                # compute and output recognized gap
+                gapPrefixOut = chainStart[1]
+                gapStartOut = str( chainFinish[2] + 1 ).zfill( len( chainFinish[3] )) ###
+                gapFinishOut = str( currentSequence[ currentIndex ][2] - 1 ).zfill( len( currentSequence[currentIndex ][3] ))
+                gapExtOut = chainStart[0]
+                gapCountOut = currentSequence[ currentIndex ][2] - chainFinish[2] - 1
+                print outputGap.format( prefix = gapPrefixOut,
+                                        start = gapStartOut,
+                                        finish = gapFinishOut,
+                                        ext = gapExtOut,
+                                        count = gapCountOut )
                 # redefine start, finish and number with current
                 chainStart = chainFinish = currentSequence[ currentIndex ]
                 chainLastNumber = currentSequence[ currentIndex ][2]
@@ -168,6 +178,8 @@ def pstOutputSequences():
                     finish = chainFinish[3],
                     ext = chainStart[0],
                     count = chainFinish[2] - chainStart[2] + 1 )
+    # blank line after all
+    print ' '
 
 if __name__ == '__main__':
     pstReadArgv()
@@ -184,10 +196,3 @@ if __name__ == '__main__':
         raise SystemExit , u"\n No sequences were found for this path or wildcard"
     pstOutputSequences()
     
-    '''
-    ### test output
-    for item in pst_collectedSequences:
-        print ''
-        for items in item:
-            print "\t" + str(items)
-    '''
