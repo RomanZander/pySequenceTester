@@ -2,7 +2,7 @@
 '''
 @summary: Sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.1 
+@version: 0.1.3
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -10,9 +10,9 @@
 # TODO
 # ---------------------------------------------------------------------------------------------
 """
-    sequences and gaps recognition
-    formatted output
+    gap formatting
     -help argument
+    more smart multipadding processing
 
 """
 # ---------------------------------------------------------------------------------------------
@@ -26,6 +26,11 @@
 +0.1.1 - 2012.07.14
     path cleanup from file list,
     regexp pattern cleanup from file list
++0.1.2 - 2012.07.16
+    collect sequences
++0.1.3
+    output chains/gaps
+    multipadding trap
 """
 
 import os
@@ -112,10 +117,57 @@ def pstBuildSequences():
 
 def pstOutputSequences():
     global pst_collectedSequences
-    for item in pst_collectedSequences:
-        # ...
-        pass
-    
+    # iterate collected sequences
+    for currentSequence in pst_collectedSequences:
+        # init chain start/finish from first file index/number
+        chainStart = chainFinish = currentSequence[0]
+        # init last number from first file number
+        chainLastNumber = currentSequence[0][2] 
+        outputChain = ' {prefix:s}[{start:s}-{finish:s}]{ext:s} - {count:d} frames'
+        outputGap = ' {prefix:s}[ ... ]{ext:s} GAP, {count:d} frames'
+        # new line before each sequence
+        print "\n" 
+        for currentIndex in range( 1, len( currentSequence )):
+            # compare current number, if +1 increment
+            if currentSequence[ currentIndex ][2] == ( chainLastNumber + 1 ):
+                # redefine finish and number with current
+                chainFinish = currentSequence[ currentIndex ]
+                chainLastNumber = currentSequence[ currentIndex ][2]
+            # trap multipadding in index, if equal
+            elif currentSequence[ currentIndex ][2] == chainLastNumber :
+                # create multipadding warning
+                multipaddingMessage = u"\n WARNING: MULTIPADDING DETECTED!\n Files " + \
+                    currentSequence[ currentIndex ][1] + \
+                    currentSequence[ currentIndex ][3] + \
+                    currentSequence[ currentIndex ][0] + \
+                    " and " + \
+                    chainFinish[1] + \
+                    chainFinish[3] + \
+                    chainFinish[0] + \
+                    " found in the same directory."
+                # exit with warning 
+                raise SystemExit , multipaddingMessage
+            # if not +1
+            else: 
+                # output remembered chain
+                print outputChain.format( prefix = chainStart[1],
+                    start = chainStart[3],
+                    finish = chainFinish[3],
+                    ext = chainStart[0],
+                    count = chainFinish[2] - chainStart[2] + 1 )
+                # compute and output gap
+                print outputGap.format( prefix = chainStart[1],
+                    ext = chainStart[0],
+                    count = currentSequence[ currentIndex ][2] - chainFinish[2] - 1 )
+                # redefine start, finish and number with current
+                chainStart = chainFinish = currentSequence[ currentIndex ]
+                chainLastNumber = currentSequence[ currentIndex ][2]
+        # output final chain
+        print outputChain.format( prefix = chainStart[1],
+                    start = chainStart[3],
+                    finish = chainFinish[3],
+                    ext = chainStart[0],
+                    count = chainFinish[2] - chainStart[2] + 1 )
 
 if __name__ == '__main__':
     pstReadArgv()
@@ -132,12 +184,10 @@ if __name__ == '__main__':
         raise SystemExit , u"\n No sequences were found for this path or wildcard"
     pstOutputSequences()
     
+    '''
     ### test output
-    
     for item in pst_collectedSequences:
-        print '['
+        print ''
         for items in item:
             print "\t" + str(items)
-        print '],'
-    
-    ###/
+    '''
