@@ -11,4 +11,4 @@ pySequenceTester is a simple python script that searches for files that meet the
 containing a numerical sequence index (e.g. filename0001.ext, filename0002.ext, filename0003.ext etc.), 
 and recognizes the number of files and possible gaps in the sequences.
 
-*Note: Now this is not fully functional alpha*
+*Note: Now it's mostly functional alpha*
