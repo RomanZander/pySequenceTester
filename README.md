@@ -1,7 +1,7 @@
 pySequenceTester
 ================
 
-Sequence integrity tester, console version.
+File / image Sequence integrity tester, console version.
 
 **Аpplicable to:
 Image sequence integrity testing in Digital intermediate | post-production | production | CG 
