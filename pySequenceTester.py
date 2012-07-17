@@ -149,6 +149,8 @@ def pstOutputSequences():
             else: 
                 # compute and output remembered chain
                 chainPrefixOut = chainStart[1]
+                if chainPrefixOut == None: 
+                    chainPrefixOut = ''
                 chainStartOut = chainStart[3]
                 chainFinishOut = chainFinish[3]
                 chainExtOut = chainStart[0]
@@ -160,6 +162,8 @@ def pstOutputSequences():
                                           count = chainCountOut )
                 # compute and output recognized gap
                 gapPrefixOut = chainStart[1]
+                if gapPrefixOut == None: 
+                    gapPrefixOut = ''
                 gapStartOut = str( chainFinish[2] + 1 ).zfill( len( chainFinish[3] )) ###
                 gapFinishOut = str( currentSequence[ currentIndex ][2] - 1 ).zfill( len( currentSequence[currentIndex ][3] ))
                 gapExtOut = chainStart[0]
@@ -172,12 +176,19 @@ def pstOutputSequences():
                 # redefine start, finish and number with current
                 chainStart = chainFinish = currentSequence[ currentIndex ]
                 chainLastNumber = currentSequence[ currentIndex ][2]
-        # output final chain
-        print outputChain.format( prefix = chainStart[1],
-                    start = chainStart[3],
-                    finish = chainFinish[3],
-                    ext = chainStart[0],
-                    count = chainFinish[2] - chainStart[2] + 1 )
+        # compute and output final chain
+        chainPrefixOut = chainStart[1]
+        if chainPrefixOut == None: 
+            chainPrefixOut = ''
+        chainStartOut = chainStart[3]
+        chainFinishOut = chainFinish[3]
+        chainExtOut = chainStart[0]
+        chainCountOut = chainFinish[2] - chainStart[2] + 1
+        print outputChain.format( prefix = chainPrefixOut,
+                                  start = chainStartOut,
+                                  finish = chainFinishOut,
+                                  ext = chainExtOut,
+                                  count = chainCountOut )
     # blank line after all
     print ' '
 
