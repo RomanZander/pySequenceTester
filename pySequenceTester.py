@@ -2,7 +2,7 @@
 '''
 @summary: Sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.4
+@version: 0.1.5
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -10,7 +10,7 @@
 # TODO
 # ---------------------------------------------------------------------------------------------
 """
-    -output path when directory/subdirectory scaned
+    -proper folders scan/compare
     -help argument
 """
 # ---------------------------------------------------------------------------------------------
@@ -31,6 +31,9 @@
     multipadding trap
 +0.1.4
     smart gap output
++0.1.5
+    folders scan
+    output path when directory/subdirectory scaned 
 """
 
 import os
@@ -83,38 +86,31 @@ def pstSmartSort( a, b ):
     else:
         return -1
 
+def pstSmartPattern(item):
+    return pst_compiledPattern.match( item[1] )
+
 def pstGetRawFileList():
     global pst_fileList
     pst_fileList = sorted( glob( os.path.join( pst_pathToScan, pst_wildcardToScan )))
     
-
 def pstCleanUpFileList():
     global pst_fileList
-    
-    ###
-    '''
-    print pst_fileList
-    print '-----------------'
-    '''
-    ###/
-    
     # extract file basename
-    #pst_fileList = map(os.path.basename, pst_fileList)
-    
-     
+    pst_fileList = map(os.path.split, pst_fileList)
     # filter for name convention by regexp pattern
-    pst_fileList = filter( pst_compiledPattern.match, pst_fileList )
-
+    pst_fileList = filter( pstSmartPattern, pst_fileList )
+    
 def pstBuildSequences():
     global pst_fileList, pst_collectedSequences
     # build splitted file list (splitted by extention, filename prefix and file number)
     splittedList = [] 
     for fileName in pst_fileList:
-        filePrefix = pst_compiledPattern.match( fileName ).group( 1 )
-        fileIndex = pst_compiledPattern.match( fileName ).group( 2 )
+        filePath = fileName[0]
+        filePrefix = pst_compiledPattern.match( fileName[1] ).group( 1 )
+        fileIndex = pst_compiledPattern.match( fileName[1] ).group( 2 )
         fileNumber = int( fileIndex, 10 )
-        fileExt = pst_compiledPattern.match(fileName).group(3)
-        splittedList.append( {'path':pst_pathToScan, 'ext':fileExt, 'prefix':filePrefix, 'number':fileNumber, 'index':fileIndex} )
+        fileExt = pst_compiledPattern.match( fileName[1] ).group(3)
+        splittedList.append( {'path':filePath, 'ext':fileExt, 'prefix':filePrefix, 'number':fileNumber, 'index':fileIndex} )
     # sort splitted file list
     splittedList.sort( cmp = pstSmartSort )
     # recollect by extention
