@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*- 
 '''
-@summary: Sequence integrity tester, console version
+@summary: File sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.4
+@version: 0.1.5
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -10,7 +10,6 @@
 # TODO
 # ---------------------------------------------------------------------------------------------
 """
-    -output path when directory/subdirectory scaned
     -help argument
 """
 # ---------------------------------------------------------------------------------------------
@@ -31,6 +30,9 @@
     multipadding trap
 +0.1.4
     smart gap output
++0.1.5
+    folders scan
+    output path when directory/subdirectory scanned 
 """
 
 import os
@@ -64,33 +66,46 @@ def pstReadArgv():
             raise TypeError, u'Unsupported format for path argument'
     # scan current directory if no arguments
     else:
-        pst_wildcardToScan = '.'
+        pst_pathToScan = '.'
         pst_wildcardToScan = '*'
+
+def pstSmartSort( a, b ):
+    aListed = [ a['path'], a['ext'], a['prefix'], a['number'], a['index'] ]
+    bListed = [ b['path'], b['ext'], b['prefix'], b['number'], b['index'] ]
+    if aListed > bListed:
+        return 1
+    elif aListed == bListed:
+        return 0
+    else:
+        return -1
+
+def pstSmartPattern( item ):
+    return pst_compiledPattern.match( item[1] )
 
 def pstGetRawFileList():
     global pst_fileList
     pst_fileList = sorted( glob( os.path.join( pst_pathToScan, pst_wildcardToScan )))
     
-
 def pstCleanUpFileList():
     global pst_fileList
     # extract file basename
-    pst_fileList = map(os.path.basename, pst_fileList) 
+    pst_fileList = map(os.path.split, pst_fileList)
     # filter for name convention by regexp pattern
-    pst_fileList = filter( pst_compiledPattern.match, pst_fileList )
-
+    pst_fileList = filter( pstSmartPattern, pst_fileList )
+    
 def pstBuildSequences():
     global pst_fileList, pst_collectedSequences
     # build splitted file list (splitted by extention, filename prefix and file number)
     splittedList = [] 
     for fileName in pst_fileList:
-        filePrefix = pst_compiledPattern.match( fileName ).group( 1 )
-        fileIndex = pst_compiledPattern.match( fileName ).group( 2 )
+        filePath = fileName[0]
+        filePrefix = pst_compiledPattern.match( fileName[1] ).group( 1 )
+        fileIndex = pst_compiledPattern.match( fileName[1] ).group( 2 )
         fileNumber = int( fileIndex, 10 )
-        fileExt = pst_compiledPattern.match(fileName).group(3)
-        splittedList.append( [fileExt, filePrefix, fileNumber, fileIndex] )
+        fileExt = pst_compiledPattern.match( fileName[1] ).group(3)
+        splittedList.append( {'path':filePath, 'ext':fileExt, 'prefix':filePrefix, 'number':fileNumber, 'index':fileIndex} )
     # sort splitted file list
-    splittedList.sort()
+    splittedList.sort( cmp = pstSmartSort )
     # recollect by extention
     currentSequence = []
     lastToCompare = None
@@ -99,14 +114,14 @@ def pstBuildSequences():
         if lastToCompare == None:
             currentSequence.append(splittedElement)
             # remember extention and prefix
-            lastToCompare = [ splittedElement[0], splittedElement[1] ]
+            lastToCompare = [ splittedElement['ext'], splittedElement['prefix'] ]
         # same extention and prefix
-        elif lastToCompare == [ splittedElement[0], splittedElement[1] ]:
+        elif lastToCompare == [ splittedElement['ext'], splittedElement['prefix'] ]:
             currentSequence.append(splittedElement)
         # extention or prefix changed
         else:
             pst_collectedSequences.append(currentSequence)
-            lastToCompare = [ splittedElement[0], splittedElement[1] ]
+            lastToCompare = [ splittedElement['ext'], splittedElement['prefix'] ]
             currentSequence = []
             currentSequence.append(splittedElement)
     # close (last loop) collection
@@ -121,71 +136,77 @@ def pstOutputSequences():
         # init chain start/finish from first file index/number
         chainStart = chainFinish = currentSequence[0]
         # init last number from first file number
-        chainLastNumber = currentSequence[0][2] 
-        outputChain = ' {prefix:s}[{start:s}-{finish:s}]{ext:s} - {count:d} frames'
-        outputGap = ' {prefix:s}[{start:s}-{finish:s}]{ext:s} GAP FOUND, {count:d} frames'
+        chainLastNumber = currentSequence[0]['number'] 
+        outputChain = '{path:s}' + os.sep + '{prefix:s}[{start:s}-{finish:s}]{ext:s} - {count:d} frames'
+        outputGap = '{path:s}' + os.sep + '{prefix:s}[{start:s}-{finish:s}]{ext:s} GAP FOUND, {count:d} frames'
         # blank line before each sequence
         print ' ' 
         for currentIndex in range( 1, len( currentSequence )):
             # compare current number, if +1 increment
-            if currentSequence[ currentIndex ][2] == ( chainLastNumber + 1 ):
+            if currentSequence[ currentIndex ]['number'] == ( chainLastNumber + 1 ):
                 # redefine finish and number with current
                 chainFinish = currentSequence[ currentIndex ]
-                chainLastNumber = currentSequence[ currentIndex ][2]
+                chainLastNumber = currentSequence[ currentIndex ]['number']
             # trap multipadding in index, if equal
-            elif currentSequence[ currentIndex ][2] == chainLastNumber :
+            elif currentSequence[ currentIndex ]['number'] == chainLastNumber :
                 # create multipadding warning
                 multipaddingMessage = u"\n WARNING: MULTIPADDING DETECTED!\n Files " + \
-                    currentSequence[ currentIndex ][1] + \
-                    currentSequence[ currentIndex ][3] + \
-                    currentSequence[ currentIndex ][0] + \
+                    currentSequence[ currentIndex ]['prefix'] + \
+                    currentSequence[ currentIndex ]['index'] + \
+                    currentSequence[ currentIndex ]['ext'] + \
                     " and " + \
-                    chainFinish[1] + \
-                    chainFinish[3] + \
-                    chainFinish[0] + \
+                    chainFinish['prefix'] + \
+                    chainFinish['index'] + \
+                    chainFinish['ext'] + \
                     " found in the same directory."
                 # exit with warning 
                 raise SystemExit , multipaddingMessage
             # if not +1
             else: 
                 # compute and output remembered chain
-                chainPrefixOut = chainStart[1]
+                chainPathOut = chainStart['path']
+                chainPrefixOut = chainStart['prefix']
                 if chainPrefixOut == None: 
                     chainPrefixOut = ''
-                chainStartOut = chainStart[3]
-                chainFinishOut = chainFinish[3]
-                chainExtOut = chainStart[0]
-                chainCountOut = chainFinish[2] - chainStart[2] + 1
-                print outputChain.format( prefix = chainPrefixOut,
+                chainStartOut = chainStart['index']
+                chainFinishOut = chainFinish['index']
+                chainExtOut = chainStart['ext']
+                chainCountOut = chainFinish['number'] - chainStart['number'] + 1
+                print outputChain.format( path = chainPathOut,
+                                          prefix = chainPrefixOut,
                                           start = chainStartOut,
                                           finish = chainFinishOut,
                                           ext = chainExtOut,
                                           count = chainCountOut )
                 # compute and output recognized gap
-                gapPrefixOut = chainStart[1]
+                gapPathOut = chainStart['path']
+                gapPrefixOut = chainStart['prefix']
                 if gapPrefixOut == None: 
                     gapPrefixOut = ''
-                gapStartOut = str( chainFinish[2] + 1 ).zfill( len( chainFinish[3] )) ###
-                gapFinishOut = str( currentSequence[ currentIndex ][2] - 1 ).zfill( len( currentSequence[currentIndex ][3] ))
-                gapExtOut = chainStart[0]
-                gapCountOut = currentSequence[ currentIndex ][2] - chainFinish[2] - 1
-                print outputGap.format( prefix = gapPrefixOut,
+                gapStartOut = str( chainFinish['number'] + 1 ).zfill( len( chainFinish['index'] )) ###
+                gapFinishOut = str( currentSequence[ currentIndex ]['number'] - 1 ).zfill( len( currentSequence[currentIndex ]['index'] ))
+                gapExtOut = chainStart['ext']
+                gapCountOut = currentSequence[ currentIndex ]['number'] - chainFinish['number'] - 1
+                print outputGap.format( path = gapPathOut,
+                                        prefix = gapPrefixOut,
                                         start = gapStartOut,
                                         finish = gapFinishOut,
                                         ext = gapExtOut,
                                         count = gapCountOut )
                 # redefine start, finish and number with current
                 chainStart = chainFinish = currentSequence[ currentIndex ]
-                chainLastNumber = currentSequence[ currentIndex ][2]
+                chainLastNumber = currentSequence[ currentIndex ]['number']
         # compute and output final chain
-        chainPrefixOut = chainStart[1]
+        chainPathOut = chainStart['path']
+        chainPrefixOut = chainStart['prefix']
         if chainPrefixOut == None: 
             chainPrefixOut = ''
-        chainStartOut = chainStart[3]
-        chainFinishOut = chainFinish[3]
-        chainExtOut = chainStart[0]
-        chainCountOut = chainFinish[2] - chainStart[2] + 1
-        print outputChain.format( prefix = chainPrefixOut,
+        chainStartOut = chainStart['index']
+        chainFinishOut = chainFinish['index']
+        chainExtOut = chainStart['ext']
+        chainCountOut = chainFinish['number'] - chainStart['number'] + 1
+        print outputChain.format( path = chainPathOut,
+                                  prefix = chainPrefixOut,
                                   start = chainStartOut,
                                   finish = chainFinishOut,
                                   ext = chainExtOut,
@@ -202,9 +223,10 @@ if __name__ == '__main__':
     pstCleanUpFileList()
     if len( pst_fileList ) == 0: # nothing sequence-like in list
         raise SystemExit , u"\n No sequence-like files were found for this path or wildcard"
-
+    
     pstBuildSequences()
     if len( pst_collectedSequences ) == 0: # nothing sequence-like in list
         raise SystemExit , u"\n No sequences were found for this path or wildcard"
+    
     pstOutputSequences()
     
