@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 '''
-@summary: Sequence integrity tester, console version
+@summary: File sequence integrity tester, console version
 @since: 2012.07.12
 @version: 0.1.5
 @author: Roman Zander
