@@ -10,7 +10,6 @@
 # TODO
 # ---------------------------------------------------------------------------------------------
 """
-    -proper folders scan/compare
     -help argument
 """
 # ---------------------------------------------------------------------------------------------
@@ -33,7 +32,7 @@
     smart gap output
 +0.1.5
     folders scan
-    output path when directory/subdirectory scaned 
+    output path when directory/subdirectory scanned 
 """
 
 import os
@@ -69,12 +68,6 @@ def pstReadArgv():
     else:
         pst_pathToScan = '.'
         pst_wildcardToScan = '*'
-    
-    ###
-    print
-    print 'pst_pathToScan = ' + pst_pathToScan
-    print 'pst_wildcardToScan = ' + pst_wildcardToScan 
-    ###/
 
 def pstSmartSort( a, b ):
     aListed = [ a['path'], a['ext'], a['prefix'], a['number'], a['index'] ]
@@ -86,7 +79,7 @@ def pstSmartSort( a, b ):
     else:
         return -1
 
-def pstSmartPattern(item):
+def pstSmartPattern( item ):
     return pst_compiledPattern.match( item[1] )
 
 def pstGetRawFileList():
