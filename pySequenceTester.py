@@ -2,7 +2,7 @@
 '''
 @summary: File sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.5
+@version: 0.1.6
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -11,28 +11,31 @@
 # ---------------------------------------------------------------------------------------------
 """
     -help argument
+    
 """
 # ---------------------------------------------------------------------------------------------
 # CHANGELOG
 # ---------------------------------------------------------------------------------------------
 """
++0.1.6
+   folder issue#2 fixed
++0.1.5
+    folders scan
+    output path when directory/subdirectory scanned 
++0.1.4
+    smart gap output
++0.1.3
+    output chains/gaps
+    multipadding trap
++0.1.2 - 2012.07.16
+    collect sequences
++0.1.1 - 2012.07.14
+    path cleanup from file list,
+    regexp pattern cleanup from file list
 +0.1.0 - 2012.07.12
     arguments reading (none = current dir, path = dir, [path/]wildcard = [dir/]files),
     getting raw file list,
     dummy functions and SystemExits
-+0.1.1 - 2012.07.14
-    path cleanup from file list,
-    regexp pattern cleanup from file list
-+0.1.2 - 2012.07.16
-    collect sequences
-+0.1.3
-    output chains/gaps
-    multipadding trap
-+0.1.4
-    smart gap output
-+0.1.5
-    folders scan
-    output path when directory/subdirectory scanned 
 """
 
 import os
@@ -80,8 +83,12 @@ def pstSmartSort( a, b ):
         return -1
 
 def pstSmartPattern( item ):
-    return pst_compiledPattern.match( item[1] )
-
+    mutchResult = pst_compiledPattern.match( item[1] )
+    if mutchResult == None:
+        return False
+    else:
+        return os.path.isfile( os.path.join( item[0], item[1] ))
+     
 def pstGetRawFileList():
     global pst_fileList
     pst_fileList = sorted( glob( os.path.join( pst_pathToScan, pst_wildcardToScan )))
@@ -216,6 +223,7 @@ def pstOutputSequences():
 
 if __name__ == '__main__':
     pstReadArgv()
+    
     pstGetRawFileList()
     if len( pst_fileList ) == 0: # nothing in the directory
         raise SystemExit , u"\n No files were found for this path or wildcard"
