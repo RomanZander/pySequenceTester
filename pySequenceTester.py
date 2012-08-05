@@ -2,7 +2,7 @@
 '''
 @summary: File sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.6
+@version: 0.1.7
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -10,15 +10,16 @@
 # TODO
 # ---------------------------------------------------------------------------------------------
 """
-    -help argument
-    
+    recursive mode
 """
 # ---------------------------------------------------------------------------------------------
 # CHANGELOG
 # ---------------------------------------------------------------------------------------------
 """
++0.1.7
+    -h -help argument
 +0.1.6
-   folder issue#2 fixed
+    folder issue#2 fixed
 +0.1.5
     folders scan
     output path when directory/subdirectory scanned 
@@ -39,12 +40,13 @@
 """
 
 import os
-import sys
 import re
+import argparse
 from glob import glob
 
 pst_pathToScan = ''
 pst_wildcardToScan = ''
+# pst_mode = '' # TODO recursive scan mode, not implemented
 pst_fileList = []
 pst_collectedSequences = []
 
@@ -52,25 +54,38 @@ pst_collectedSequences = []
 pst_namingConventionPattern = '^(.*\D)?(\d+)(\.[^\.]+)$'
 pst_compiledPattern = re.compile( pst_namingConventionPattern, re.I ) 
 
-def pstReadArgv():
+def pstParseArgs():
     global pst_pathToScan, pst_wildcardToScan
-    # if arguments passed
-    if len( sys.argv ) > 1:
-        arg = sys.argv[1]
-        # argument is a real directory
-        if type( arg ) == str and os.path.isdir( arg ):
-            pst_pathToScan = arg
-            pst_wildcardToScan = '*' 
-        # interpret arg as wildcard
-        elif type( arg ) == str:
-            pst_wildcardToScan = arg
-        # WTF :)
-        else:
-            raise TypeError, u'Unsupported format for path argument'
-    # scan current directory if no arguments
-    else:
+    parser = argparse.ArgumentParser( description = 'Image|file sequence integrity tester' )
+    '''
+    # TODO recursive scan mode, not implemented
+    parser.add_argument( 
+        '-r', '--recursive',
+        action = 'store_true',
+        dest = 'recursive',
+        help = 'scan folders recursive' 
+        )
+    '''
+    parser.add_argument( 
+        'whatToScan',
+        nargs='?',
+        default='',
+        metavar='PATH|WILDCARD', 
+        help='path and/or wildcard to scan, "./*" by default' 
+        )
+    args = parser.parse_args()
+    
+    # argument is not passed (default)
+    if args.whatToScan == '':
         pst_pathToScan = '.'
         pst_wildcardToScan = '*'
+    # argument is a real directory
+    elif os.path.isdir( args.whatToScan ):
+        pst_pathToScan = args.whatToScan
+        pst_wildcardToScan = '*'
+    # treat argument as wildcard 
+    else:
+        pst_wildcardToScan = args.whatToScan
 
 def pstSmartSort( a, b ):
     aListed = [ a['path'], a['ext'], a['prefix'], a['number'], a['index'] ]
@@ -222,7 +237,8 @@ def pstOutputSequences():
     print ' '
 
 if __name__ == '__main__':
-    pstReadArgv()
+    
+    pstParseArgs()
     
     pstGetRawFileList()
     if len( pst_fileList ) == 0: # nothing in the directory
