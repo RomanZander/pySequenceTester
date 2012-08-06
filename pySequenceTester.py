@@ -2,7 +2,7 @@
 '''
 @summary: File sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.7
+@version: 0.1.8
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -10,12 +10,15 @@
 # TODO
 # ---------------------------------------------------------------------------------------------
 """
-    recursive mode
+    options for: file size, image size, image compression, image bits per pixel
+    recursive mode (to be discussed)
 """
 # ---------------------------------------------------------------------------------------------
 # CHANGELOG
 # ---------------------------------------------------------------------------------------------
 """
++0.1.8
+    -v --version argument
 +0.1.7
     -h -help argument
 +0.1.6
@@ -46,7 +49,7 @@ from glob import glob
 
 pst_pathToScan = ''
 pst_wildcardToScan = ''
-# pst_mode = '' # TODO recursive scan mode, not implemented
+pst_mode = '' # TODO recursive scan mode, not implemented
 pst_fileList = []
 pst_collectedSequences = []
 
@@ -56,6 +59,9 @@ pst_compiledPattern = re.compile( pst_namingConventionPattern, re.I )
 
 def pstParseArgs():
     global pst_pathToScan, pst_wildcardToScan
+    # extract version string from __doc__
+    versionString = [ string for string in __doc__.split('@') if ( string.startswith('version:') ) ][0]
+    # create parser
     parser = argparse.ArgumentParser( description = 'Image|file sequence integrity tester' )
     '''
     # TODO recursive scan mode, not implemented
@@ -66,6 +72,11 @@ def pstParseArgs():
         help = 'scan folders recursive' 
         )
     '''
+    parser.add_argument( 
+        '-v', '--version', 
+        action='version', 
+        version='%(prog)s ' + versionString
+        )
     parser.add_argument( 
         'whatToScan',
         nargs='?',
