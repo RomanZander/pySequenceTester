@@ -20,7 +20,7 @@
 +0.1.8
     -v --version argument
 +0.1.7
-    -h -help argument
+    -h --help argument
 +0.1.6
     folder issue#2 fixed
 +0.1.5
@@ -47,9 +47,10 @@ import re
 import argparse
 from glob import glob
 
+#some globals
 pst_pathToScan = ''
 pst_wildcardToScan = ''
-pst_mode = '' # TODO recursive scan mode, not implemented
+pst_mode = '' # 
 pst_fileList = []
 pst_collectedSequences = []
 
@@ -60,11 +61,15 @@ pst_compiledPattern = re.compile( pst_namingConventionPattern, re.I )
 def pstParseArgs():
     global pst_pathToScan, pst_wildcardToScan
     # extract version string from __doc__
-    versionString = [ string for string in __doc__.split('@') if ( string.startswith('version:') ) ][0]
+    versionStrings = [ string for string in __doc__.split('@') if ( string.startswith( 'version:' ) ) ]
+    if len(versionStrings) > 0:
+        versionString = versionStrings[0]
+    else:
+        versionString = '' 
     # create parser
     parser = argparse.ArgumentParser( description = 'Image|file sequence integrity tester' )
     '''
-    # TODO recursive scan mode, not implemented
+    # TODO recursive scan mode, not implemented, to be discussed 
     parser.add_argument( 
         '-r', '--recursive',
         action = 'store_true',
