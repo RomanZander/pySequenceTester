@@ -12,3 +12,5 @@ containing a numerical sequence index (e.g. filename0001.ext, filename0002.ext, 
 and recognizes the number of files and possible gaps in the sequences.
 
 *Note: Now it's mostly functional alpha*
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/50d52bb5a3851a68f31e54cdfb4c82ae "githalytics.com")](http://githalytics.com/RomanZander/pySequenceTester)
