@@ -114,10 +114,12 @@ def pstSmartSort( a, b ):
         return -1
 
 def pstSmartPattern( item ):
+    # name convention by regexp pattern
     mutchResult = pst_compiledPattern.match( item[1] )
     if mutchResult == None:
         return False
     else:
+        # ensure that's a file, not folder
         return os.path.isfile( os.path.join( item[0], item[1] ))
      
 def pstGetRawFileList():
@@ -128,7 +130,7 @@ def pstCleanUpFileList():
     global pst_fileList
     # extract file basename
     pst_fileList = map(os.path.split, pst_fileList)
-    # filter for name convention by regexp pattern
+    # filter for name convention by regexp pattern + check that it is a file, not folder
     pst_fileList = filter( pstSmartPattern, pst_fileList )
     
 def pstBuildSequences():
