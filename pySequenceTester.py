@@ -2,7 +2,7 @@
 '''
 @summary: File sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.8
+@version: 0.1.9
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -10,13 +10,16 @@
 # TODO
 # ---------------------------------------------------------------------------------------------
 """
-    options for: file size, image size, image compression, image bits per pixel
+    implementation file size, 
+    options for: image size, image compression, image bits per pixel
     recursive mode (to be discussed)
 """
 # ---------------------------------------------------------------------------------------------
 # CHANGELOG
 # ---------------------------------------------------------------------------------------------
 """
++0.1.9
+    -f --filesize argument
 +0.1.8
     -v --version argument
 +0.1.7
@@ -50,7 +53,7 @@ from glob import glob
 #some globals
 pst_pathToScan = ''
 pst_wildcardToScan = ''
-pst_mode = '' # 
+pst_modeList = [] 
 pst_fileList = []
 pst_collectedSequences = []
 
@@ -78,6 +81,12 @@ def pstParseArgs():
         )
     '''
     parser.add_argument( 
+        '-f', '--filesize',
+        action = 'store_true',
+        dest = 'filesize',
+        help = 'scan the file sizes' 
+        )
+    parser.add_argument( 
         '-v', '--version', 
         action='version', 
         version='%(prog)s ' + versionString
@@ -90,6 +99,10 @@ def pstParseArgs():
         help='path and/or wildcard to scan, "./*" by default' 
         )
     args = parser.parse_args()
+    
+    # add to mode list
+    if args.filesize:
+        pst_modeList.append('filesize')
     
     # argument is not passed (default)
     if args.whatToScan == '':
@@ -132,18 +145,45 @@ def pstCleanUpFileList():
     pst_fileList = map(os.path.split, pst_fileList)
     # filter for name convention by regexp pattern + check that it is a file, not folder
     pst_fileList = filter( pstSmartPattern, pst_fileList )
+
+def pstFetchFilesize(item):
+    return item[0], item[1], 'filesizehere'
+
+def pstFetchInfoToFileList():
+    global pst_fileList
+    # fetch additional file info
+    if ( 'filesize' in pst_modeList ):
+        pst_fileList = map( 
+                           pstFetchFilesize,
+                           pst_fileList
+                           )
     
 def pstBuildSequences():
     global pst_fileList, pst_collectedSequences
     # build splitted file list (splitted by extention, filename prefix and file number)
     splittedList = [] 
-    for fileName in pst_fileList:
-        filePath = fileName[0]
-        filePrefix = pst_compiledPattern.match( fileName[1] ).group( 1 )
-        fileIndex = pst_compiledPattern.match( fileName[1] ).group( 2 )
+    for fileItem in pst_fileList:
+        filePath = fileItem[0]
+        filePrefix = pst_compiledPattern.match( fileItem[1] ).group( 1 )
+        fileIndex = pst_compiledPattern.match( fileItem[1] ).group( 2 )
         fileNumber = int( fileIndex, 10 )
-        fileExt = pst_compiledPattern.match( fileName[1] ).group(3)
-        splittedList.append( {'path':filePath, 'ext':fileExt, 'prefix':filePrefix, 'number':fileNumber, 'index':fileIndex} )
+        fileExt = pst_compiledPattern.match( fileItem[1] ).group(3)
+        
+        # mode-dependent options
+        if ( 'filesize' in pst_modeList ):
+            fileSize = fileItem[2]
+        else:
+            fileSize = None
+        # TODO implement other mode-dependent options
+        
+        splittedList.append( {
+                  'path':filePath, 
+                  'ext':fileExt, 
+                  'prefix':filePrefix, 
+                  'number':fileNumber, 
+                  'index':fileIndex,
+                  'filesize':fileSize
+                  } )
     # sort splitted file list
     splittedList.sort( cmp = pstSmartSort )
     # recollect by extention
@@ -265,6 +305,8 @@ if __name__ == '__main__':
     pstCleanUpFileList()
     if len( pst_fileList ) == 0: # nothing sequence-like in list
         raise SystemExit , u"\n No sequence-like files were found for this path or wildcard"
+    
+    pstFetchInfoToFileList()
     
     pstBuildSequences()
     if len( pst_collectedSequences ) == 0: # nothing sequence-like in list
