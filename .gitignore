@@ -3,6 +3,7 @@
 .pydevproject
 .settings*
 test.py
+/test4
 
 *.py[co]
 
