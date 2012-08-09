@@ -2,7 +2,7 @@
 '''
 @summary: File sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.10
+@version: 0.1.11
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -136,10 +136,9 @@ def pstSmartPattern( item ):
         return False
     else:
         # ensure that's a file, not folder
-        ### TODO boost performance here (os.stat?)
         #return os.path.isfile( os.path.join( item[0], item[1] ))
-        return True
-        # return stat.S_ISREG( os.stat( os.path.join( item[0], item[1] ) )[ST_MODE] )
+        ### TODO boost performance here (os.stat?)
+        return S_ISREG( os.stat( os.path.join( item[0], item[1] ) )[ST_MODE] )
      
 def pstGetRawFileList():
     global pst_fileList
