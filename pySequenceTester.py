@@ -129,16 +129,33 @@ def pstSmartSort( a, b ):
     else:
         return -1
 
+def pstFetchFilesize(item):
+    '''
+    idea:
+    >>> os.stat('test4')
+    nt.stat_result(st_mode=16895, st_ino=0L, st_dev=0, st_nlink=0, st_uid=0, st_gid=0, st_size=0L, 
+        st_atime=1344465813L, st_mtime=1344465813L, st_ctime=1344461926L)
+    >>> os.stat('test4/huge-length-dummy-sequence.0000001.dpx')
+    nt.stat_result(st_mode=33206, st_ino=0L, st_dev=0, st_nlink=0, st_uid=0, st_gid=0, st_size=8L, 
+        st_atime=1344465866L, st_mtime=1344462671L, st_ctime=1344462671L)
+### TODO boost performance here (os.stat?)
+# ensure that's a file, not folder
+#return S_ISREG( os.stat( os.path.join( item[0], item[1] ) )[ST_MODE] )
+    '''
+    return item[0], item[1], item[1] # FILE SIZE HERE
+
+def pstFetchInfoToFileList():
+    global pst_fileList
+    # fetch additional file info
+    if ( 'filesize' in pst_modeList ):
+        pst_fileList = map( 
+                           pstFetchFilesize,
+                           pst_fileList
+                           )
+
 def pstSmartPattern( item ):
-    # name convention by regexp pattern
-    mutchResult = pst_compiledPattern.match( item[1] )
-    if mutchResult == None:
-        return False
-    else:
-        # ensure that's a file, not folder
-        #return os.path.isfile( os.path.join( item[0], item[1] ))
-        ### TODO boost performance here (os.stat?)
-        return S_ISREG( os.stat( os.path.join( item[0], item[1] ) )[ST_MODE] )
+    # tests name convention by regexp pattern
+    return pst_compiledPattern.match( item[1] )
      
 def pstGetRawFileList():
     global pst_fileList
@@ -150,27 +167,6 @@ def pstCleanUpFileList():
     pst_fileList = map(os.path.split, pst_fileList)
     # filter for name convention by regexp pattern + check that it is a file, not folder
     pst_fileList = filter( pstSmartPattern, pst_fileList )
-
-def pstFetchFilesize(item):
-    '''
-    idea:
-    >>> os.stat('test4')
-    nt.stat_result(st_mode=16895, st_ino=0L, st_dev=0, st_nlink=0, st_uid=0, st_gid=0, st_size=0L, 
-        st_atime=1344465813L, st_mtime=1344465813L, st_ctime=1344461926L)
-    >>> os.stat('test4/huge-length-dummy-sequence.0000001.dpx')
-    nt.stat_result(st_mode=33206, st_ino=0L, st_dev=0, st_nlink=0, st_uid=0, st_gid=0, st_size=8L, 
-        st_atime=1344465866L, st_mtime=1344462671L, st_ctime=1344462671L)
-    '''
-    return item[0], item[1], 'FILE SIZE HERE'
-
-def pstFetchInfoToFileList():
-    global pst_fileList
-    # fetch additional file info
-    if ( 'filesize' in pst_modeList ):
-        pst_fileList = map( 
-                           pstFetchFilesize,
-                           pst_fileList
-                           )
     
 def pstBuildSequences():
     global pst_fileList, pst_collectedSequences
