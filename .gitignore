@@ -4,9 +4,9 @@
 .settings*
 test.py
 /test4
-#cProfile*
 #*.log
 .gitignore~
+us.stackdump
 
 *.py[co]
 
