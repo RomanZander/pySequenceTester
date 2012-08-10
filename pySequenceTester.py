@@ -2,7 +2,7 @@
 '''
 @summary: File sequence integrity tester, console version
 @since: 2012.07.12
-@version: 0.1.11
+@version: 0.1.12
 @author: Roman Zander
 @see:  https://github.com/RomanZander/pySequenceTester
 '''
@@ -20,6 +20,8 @@
 # CHANGELOG
 # ---------------------------------------------------------------------------------------------
 """
++0.1.12
+    
 +0.1.9
     -f --filesize argument
 +0.1.8
@@ -146,12 +148,23 @@ def pstFetchFilesize(item):
 
 def pstFetchInfoToFileList():
     global pst_fileList
-    # fetch additional file info
+    
+    if ( 'filesize' in pst_modeList ): # fetch additional file info
+        for index in range( len( pst_fileList ) ):
+            itemFoldername = pst_fileList[index][0]
+            itemFilename = pst_fileList[index][1]
+            # get stat from filesistem
+            itemMode = os.stat( os.path.join( itemFoldername, itemFilename ) )[ST_MODE] 
+            if S_ISREG(itemMode): # for regular file
+                pst_fileList[index] = itemFoldername, itemFilename, 'regular file'
+            
+    '''
     if ( 'filesize' in pst_modeList ):
         pst_fileList = map( 
                            pstFetchFilesize,
                            pst_fileList
                            )
+    '''
 
 def pstSmartPattern( item ):
     # tests name convention by regexp pattern
